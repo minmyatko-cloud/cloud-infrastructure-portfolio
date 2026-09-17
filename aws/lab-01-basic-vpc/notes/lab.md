@@ -91,12 +91,11 @@ Public User → Dashboard → Counting → esponse returned to user
 - 3 Security Groups
 - SSH key pair
 	- Public IPv4/EIP where required
-![architecture](cloud-infrastructure-portfolioaws/lab-01-basic-vpc/diagrams/basic-vpc-architecture.png)
+
 ---
 
 ## 2.1. Target Architecture
 
-![architecture](image.png)
 https://github.com/minmyatko-cloud/cloud-infrastructure-portfolio/blob/main/aws/lab-01-basic-vpc/diagrams/basic-vpc-architecture.png
 ---
 
