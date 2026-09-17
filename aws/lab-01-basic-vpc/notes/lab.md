@@ -95,8 +95,6 @@ Public User → Dashboard → Counting → esponse returned to user
 ---
 
 ## 2.1. Target Architecture
-
-https://github.com/minmyatko-cloud/cloud-infrastructure-portfolio/blob/main/aws/lab-01-basic-vpc/diagrams/basic-vpc-architecture.png
 ---
 
 ## 2.2.  Network Plan
