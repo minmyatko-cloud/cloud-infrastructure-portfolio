@@ -91,11 +91,11 @@ Public User → Dashboard → Counting → esponse returned to user
 - 3 Security Groups
 - SSH key pair
 	- Public IPv4/EIP where required
+![architecture](diagrams/basic-vpc-architecture.png)
 ---
 
 ## 2.1. Target Architecture
 
-![[Pasted image 20260916003825.png]]
 
 
 ---
