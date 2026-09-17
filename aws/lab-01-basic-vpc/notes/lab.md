@@ -97,7 +97,7 @@ Public User → Dashboard → Counting → esponse returned to user
 
 ## 2.1. Target Architecture
 
-![architecture](aws/lab-01-basic-vpc/diagrams/basic-vpc-architecture.png)
+![Basic VPC Architecture](../diagrams/basic-vpc-architecture.png)
 
 
 ## 2.2.  Network Plan
