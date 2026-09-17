@@ -91,21 +91,14 @@ Public User → Dashboard → Counting → esponse returned to user
 - 3 Security Groups
 - SSH key pair
 	- Public IPv4/EIP where required
-<<<<<<< HEAD
+
 
 ---
 
 ## 2.1. Target Architecture
-=======
-![architecture]
----
 
-## 2.1. Target Architecture
+![architecture](aws/lab-01-basic-vpc/diagrams/basic-vpc-architecture.png)
 
-![Architecture](aws/lab-01-basic-vpc/diagrams/basic-vpc-architecture.png)
-
->>>>>>> 4d39571 (add photo)
----
 
 ## 2.2.  Network Plan
 
