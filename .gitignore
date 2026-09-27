@@ -2,3 +2,4 @@
 .terraform/
 *.tfsate
 '.$cie-session-01-sep-05.drawio.bkp'
+hello-cloud/lab-04-ALB\ \&\ multi-instance\ HA/certificate_chain.crt
