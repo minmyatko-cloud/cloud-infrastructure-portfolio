@@ -1,43 +1,14 @@
-
->[!Lab Goal]
->
-Upgrade Lab 3 into an automated, scalable, self-healing, and TLS-secured multi-AZ application architecture.
->
->## Objectives
->
->- Create Launch Templates for Dashboard and Counting EC2 instances.  
->- Automate application installation and systemd configuration using User Data.
->- Run application services with dedicated non-login users.
->- Create separate Auto Scaling Groups across two Availability Zones.
->- Automatically register EC2 instances with their target groups.
->- Replace unhealthy instances automatically.
->- Configure scaling policies to adjust capacity based on demand.
->- Create private service names using a Route 53 Private Hosted Zone.
->- Issue private TLS certificates using AWS Private CA and ACM.
->- Configure HTTPS listeners to encrypt application traffic.
->- Test DNS, TLS, load balancing, scaling, failover, and instance replacement.
-
-
-
-
-[[#1. Existing Infrastructure]]
-[[#2. Upgraded Design and Infrastructure]]
-[[#3. Implementation]]
-[[#3. Planning]]
-[[#5. Testing]]
-[[#6. Experiences]]
-
-
-# 1. Existing Infrastructure
+# 1. Existing Infrastructure (In Lab 3)
 
 Dashboard and Counting EC2 instances across two Availability Zones, runs each application mannually with a dedicated service user, and distributes traffic through public and internal Application Load Balancers.
 
-![[Pasted image 20260925135905.png]]
+![Secure Multi-AZ Application with ALB and Dedicated Service Users](../evidence/existing-infra-lab3.png)
 
 
 # 2. Upgrade Design and Infrastructure
 
-![[Pasted image 20260926132542.png]]
+![Secure Multi-AZ Applicaiton with ASG,ALB and Dedicaed Users](../evidence/upgraded-infra-lab4.png)
+
 # 3. Planning
 
 ## 1. Existing Resources to Reuse from Lab-3
@@ -68,20 +39,13 @@ Dashboard and Counting EC2 instances across two Availability Zones, runs each ap
 
 ## 3. DNS Plan
 
-Create a Route 53 Private Hosted Zone:
+# Create a Route 53 Private Hosted Zone:
+  E.g roycloud.ai
 
-```
-<private-domain>
-```
+# Create Alias records:
 
-E.g roycloud.ai
-
-Create Alias records:
-
-```
 dashboard.<private-domain> → Dashboard ALB
 counting.<private-domain>  → Counting ALB
-```
 
 The private DNS names resolve only from the associated VPC.
 
@@ -96,9 +60,7 @@ The private DNS names resolve only from the associated VPC.
 - Install the Private CA root certificate on trusted clients.
 - Configure Dashboard with:
 
-```
 COUNTING_SERVICE_URL=https://counting.<private-domain>
-```
 
 ## 5. Security Group Plan
 
@@ -111,28 +73,22 @@ COUNTING_SERVICE_URL=https://counting.<private-domain>
 
 Allow outbound HTTP/HTTPS from private EC2 instances through the NAT Gateway for User Data downloads.
 
-
-
 ## 6. Mandatory ASG Settings
 
-```
 Health check type: ELB
 Health check grace period: 300 seconds
 Default instance warmup: 300 seconds
 Minimum: 2
 Desired: 2
 Maximum: 3
-```
-
 
 
 # 3. Implementation
 
 ## 3.1 Create Counting Launch Template
 
-```
 EC2 Console → Launch Templates → Create launch template
-```
+
 
 Inputs:
 
@@ -150,18 +106,16 @@ Inputs:
 | Metadata version             | IMDSv2 required               |
 Resource Tags
 
-```
+
 Name = counting-asg-instance
 Application = counting-service
-```
+
+
 
 ### Counting User Data
 
 Paste the verified Counting User Data script.
-
 ```bash
-```bash
-
 #!/bin/bash
 
 # Write User Data output to the log file
@@ -228,48 +182,32 @@ systemctl daemon-reload
 systemctl start counting-service
 systemctl enable --now counting-service
 ```
-
-Keep this option unticked:
-
-```
-☐ User data has already been base64 encoded
-```
-
->[!Note]
+[!Note]
 Do not select a subnet in the Launch Template. The Counting Auto Scaling Group will select the two private subnets later.
+![Coutning Launc Template](../evidence/counting-launch-template.png)
+
 
 ## 3.2 Create Counting Auto Scaling Group
 
-
-```
-EC2 Console → Auto Scaling Groups → Create Auto Scaling group
-```
-
 ### 1. Choose Launch Template
 
-```
 Auto Scaling group name : counting-asg
 Launch template : counting-lt
 Version : Default
-```
 
 ### 2. Choose Network
 
-```
 VPC: vpc-01-roycloud
 AZ : ap-southeast-1a (prviate-subnet-1-roycloud), ap-southeast-1b ((prviate-subnet-2-roycloud)
 
-```
 
 ### 3. Attach Load Balancer
 
-```
 Attach to an existing load balancer : Choose from your load balancer target groups
 
 Target group: counting-tg
 Enable: Elastic Load Balancing health checks
 Health check grace period: 300 seconds
-```
 
 ### 4. Configure Capacity
 
@@ -288,10 +226,8 @@ Do not configure the scaling policy yet.
 | `Name`        | `counting-asg-instance` | Yes       |
 | `Application` | `counting-service`      | Yes       |
 
->[!Note]
->Wait until:
->
->```
+[!Note]
+Wait until:
 ASG instances: InService
 Target group: Both targets Healthy
 
@@ -299,28 +235,20 @@ Target group: Both targets Healthy
 
 ### Console Checks
 
-Check:
-```
 EC2 → Auto Scaling Groups → counting-asg → Instance management
-```
 
 Expected:
-```
 2 instances
 Lifecycle state: InService
 Health status: Healthy
-```
 
 Check:
-```
 EC2 → Target Groups → counting-tg → Targets
-```
+
 
 Expected:
-```
 Both ASG instances: Healthy
 Port: 8000
-```
 
 Connect through the Bastion host, then run:
 ```bash
@@ -328,7 +256,6 @@ sudo cloud-init status --long
 sudo systemctl status counting-service --no-pager
 sudo ss -lntp | grep 8000
 curl http://localhost:8000/health
-sudo grep -iE "error|failed|invalid" /var/log/user-data.log ## check userdat error
 ```
 
 Expected:
@@ -338,12 +265,13 @@ active (running)
 Port 8000 listening
 HTTP 200
 ```
+![counting-asg](../evidence/auto%20Scaling-dashboard.png)
+![counting instances in service](../evidence/coutning-2-instances-in-service.png)
+
 
 ## 3.3 Create Dashboard Launch Template
 
-```
 EC2 → Launch Templates → Create launch template
-```
 
 Mandatory Inputs:
 
@@ -364,7 +292,7 @@ Mandatory Inputs:
 
 Use the Amazon Linux version:
 
-```
+```bash
 dnf install -y unzip
 ```
 
@@ -441,15 +369,12 @@ systemctl enable --now dashboard-service
 ```
 
 Set the current Counting URL:
-```
 COUNTING_URL="http://counting.lab.roycloud.ai"
-```
+
 
 If private DNS has not been created yet, temporarily use:
-
-```
 COUNTING_URL="http://internal-counting-alb-1837282896.ap-southeast-1.elb.amazonaws.com"
-```
+
 
 ### Resource Tags
 
@@ -458,14 +383,12 @@ COUNTING_URL="http://internal-counting-alb-1837282896.ap-southeast-1.elb.amazona
 | `Name`        | `dashboard-asg-instance` |
 | `Application` | `dashboard-service`      |
 | `Lab`         | `lab-04`                 |
->[!Note]
+[!Note]
 Do not select private subnets in the Launch Template. They will be selected in the Dashboard Auto Scaling Group.
 
 ## 3.4 Create Dashboard Auto Scaling Group
 
-```
 EC2 → Auto Scaling Groups → Create Auto Scaling group
-```
 
 ### 1. Choose Launch Template
 
@@ -485,14 +408,11 @@ EC2 → Auto Scaling Groups → Create Auto Scaling group
 
 ### 3. Attach Target Group
 
-
-```
 Attach to an existing load balancer: Choose from your load balancer target groups
 Target group: dashboard-tg
 Enable: Elastic Load Balancing health checks
 Health check grace period: 300 seconds
 
-```
 
 ### 4. Configure Capacity
 
@@ -513,18 +433,16 @@ Do not configure a scaling policy yet.
 
 Wait until:
 
-```
 ASG instances: InService
 dashboard-tg targets: Healthy
-```
 
 Keep the old Dashboard instance until both ASG-created Dashboard instances are healthy.
 
+![dashboard ASG](../evidence/auto%20Scaling-dashboard.png)
+![dashboard ASG instances in service](../evidence/dashboard-asg-instances.png)
 ## 3.3 Create Private Hosted Zone
 
-```
 Route 53 → Hosted zones → Create hosted zone
-```
 
 Input:
 
@@ -535,13 +453,13 @@ Input:
 | Region      | `ap-southeast-1`    |
 | VPC         | vpc-01-roycloud     |
 
+![Privated Hosted Zone](../evidence/route-53-privated-hosted-zone.png)
+
 ### 3.3.1 Create Counting DNS Record
 
 Inside the hosted zone, select:
 
-```
 Create record
-```
 
 |Field|Value|
 |---|---|
@@ -554,19 +472,14 @@ Create record
 |Evaluate target health|Yes|
 
 Result:
-```
-counting.lab.roycloud.ai → Internal Counting ALB
-```
+counting.roycloud.ai → Internal Counting ALB
 
-## Verify from an EC2 Inside the VPC
+![coutning.roycloud.ai](../evidence/dashboard.roycloud.ai.png)
 
-```
-getent hosts counting.lab.roycloud.ai
-```
 
 Test the application:
 
-```
+```bash
 curl -v http://counting.lab.roycloud.ai/health
 ```
 
@@ -617,32 +530,27 @@ Mandatory Inputs:
 | Evaluate target health | Yes                       |
 
 Select:
-
-```
 Create records
-```
 
 The result will be:
-
-```
 dashboard.roycloud.ai → Dashboard ALB
-```
+
+![dashboard.roycloud.ai](../evidence/dashboard.roycloud.ai.png)
 
 ## Verify Inside the Associated VPC
 
-```
+```bash
 nslookup dashboard.roycloud.ai. 172.20.0.2
 ```
 
 Test the Dashboard:
-
-```
+```bash
 curl -v http://dashboard.roycloud.ai/health
 ```
 
 Or test the application page:
 
-```
+```bash
 curl -v http://dashboard.roycloud.ai/
 ```
 
@@ -684,7 +592,7 @@ This is a temporary method for an internet-facing Dashboard ALB.
 Connect to the Dashboard EC2 through the Bastion host.
 
 Run:
-```
+```bash
 nslookup dashboard.roycloud.ai
 ```
 
@@ -700,6 +608,7 @@ Copy the returned IP addresses.
 ### 2. Update `/etc/hosts` on Your Local Computer
 
 On your local Ubuntu computer:
+
 ```bash
 sudo nano /etc/hosts
 ```
@@ -710,15 +619,14 @@ Add the returned ALB IP address and Dashboard DNS name:
 ```
 
 If two IP addresses were returned, you can add both:
-```
+```bash
 13.214.100.20 dashboard.roycloud.ai
 18.141.50.10 dashboard.roycloud.ai
 ```
 
 Save the file:
-```
 Ctrl+O → Enter → Ctrl+X
-```
+
 
 ### 3. Verify Local Name Resolution
 
@@ -753,25 +661,19 @@ curl -v http://dashboard.roycloud.ai/
 ```
 
 Open in the browser:
-
-```
 http://dashboard.roycloud.ai
-```
 
->[!Limitation]
->
+![Access from Browser](../evidence/dashboard.roycloud.ai.png)
+
+[!Limitation]
 ALB IP addresses can change. If access stops working, run `nslookup` again and update `/etc/hosts`. This method is suitable only for temporary lab testing.
 
 ## Create and Activate Private CA
-
-```
 AWS Private CA → Private certificate authorities → Create private CA
-```
 
-Ensure the Region is:
-```
-ap-southeast-1
-```
+
+Ensure the Region is: ap-southeast-1
+
 
 ### Mandatory Configuration
 
@@ -790,19 +692,13 @@ ap-southeast-1
 | Key    | Value    |
 | ------ | -------- |
 | `Name` | mmk      |
-| `Lab`  | `lab-04` |
 
-Select:
+Select: Create private CA
 
-```
-Create private CA
-```
 
 Initial status:
 
-```
 Pending certificate
-```
 
 ## Activate the Root CA
 
@@ -831,7 +727,7 @@ Wait for:
 Status: Active
 ```
 
->[!Note]
+[!Note]
 Do not delete or disable the CA until the ACM certificates and HTTPS listeners have been configured and tested. Delete the CA after completing the lab to prevent ongoing charges.
 
 ## Request Private TLS Certificates
@@ -847,7 +743,7 @@ Ensure the Region is:
 ```
 ap-southeast-1
 ```
-
+![Private-ca](../evidence/aws-private-ca.png)
 ## Dashboard Certificate
 
 Select:
@@ -868,7 +764,6 @@ Request a private certificate
 
 ```
 Name = dashboard-private-certificate
-Lab  = lab-04
 ```
 
 Select:
@@ -889,7 +784,7 @@ Repeat the process with:
 
 |Field|Value|
 |---|---|
-|Private CA|`Lab-4-Root-CA`|
+|Private CA|`mmk`|
 |Domain name|`counting.roycloud.ai`|
 |Key algorithm|RSA 2048|
 
@@ -911,12 +806,11 @@ Confirm both certificates show:
 Status: Issued
 Region: ap-southeast-1
 ```
+![dashboard-coutning-certificates](../evidence/dashboard-counting-certificates.png)
 
 ## Configure HTTPS on Counting ALB
 
 ### 1. Update Counting ALB Security Group
-
-Go to:
 
 ```
 EC2 → Security Groups → counting-alb-sg → Edit inbound rules
@@ -932,7 +826,6 @@ Keep HTTP port `80` temporarily until HTTPS is fully tested.
 
 ## 2. Create HTTPS Listener
 
-Go to:
 
 ```
 EC2 → Load Balancers → Counting ALB → Listeners and rules
@@ -1120,8 +1013,6 @@ Test temporarily:
 curl -vk https://dashboard.roycloud.ai/
 ```
 
-
-
 Expected:
 
 ```bash
@@ -1307,6 +1198,10 @@ Trust this certificate for identifying websites
 https://dashboard.roycloud.ai
 ```
 
+![Acces-Dashboard-with-https](../evidence/https.dashboard.roycloud.ai.png)
+
+
+# Optional
 
 ## Add Certifcated in Local Computer Trusted Store (CLI)
 
