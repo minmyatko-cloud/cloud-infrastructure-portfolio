@@ -4,8 +4,7 @@ This lab upgrades an existing Dashboard and Counting application with **Route 53
 
 ## Architecture
 
-![overview-architecture](/evidence/over-view-design-flow.png)
-
+![overview-architecture](evidence/over-view-design-flow.png)
 
 Application instances run in private subnets across multiple Availability Zones, managed by Auto Scaling Groups and Launch Templates.
 
