@@ -382,10 +382,7 @@ Check security groups:
 1. Copy the root CA certificate to the dashboard EC2 instance
 
 ```bash 
-scp -i ~/.ssh/YOUR_EC2_KEY.pem \
-  -o ProxyJump=ec2-user@BASTION_PUBLIC_IP \
-  ~/lab-5-openssl/certs/mmkcloud-root-ca.crt \
-  ec2-user@DASHBOARD_PRIVATE_IP:~/
+scp -o ProxyCommand="ssh -i /home/min-myat-ko/consul/bastion-host-keypair-roycloud.pem -W %h:%p ec2-user@18.143.118.157" -i /home/min-myat-ko/consul/application-server-keypair-roycloud.pem /home/min-myat-ko/consul/lab-05-openssl/certs/mmkcloud-root-ca.crt ec2-user@172.20.11.206:~/
 ```
 
 On a dashboard EC2 instance, first test with the root CA file without changing system trust:
@@ -395,8 +392,9 @@ curl -v --cacert /path/to/mmkcloud-root-ca.crt \
 ```
 Expect to sucess:
 ![success-test](../evidence/success%20with%20cert-path(before%20install%20to%20trust%20store).png)
+
 ```bash
-curl -v https://coutning.mmkcloud.ai
+curl -v https://counting.mmkcloud.ai
 ```
 
 Expect to fail:
@@ -405,12 +403,66 @@ Expect to fail:
 
 Use the counting service’s actual working path if / is not its endpoint. Do not use -k for the final test: --cacert lets curl verify both the certificate chain and the requested hostname. A successful response here proves that the dashboard instance can resolve the private name, reach the counting ALB on 443, and trust its certificate.
 
-## Install the root CA certificate only into the dashboard EC2 trust store
+## Step 7: Install the root CA certificate only into the dashboard EC2 trust store
 ```bash
 sudo cp mmkcloud-root-ca.crt /etc/pki/ca-trust/source/anchors/mmkcloud-root-ca.crt
 sudo chmod 644 /etc/pki/ca-trust/source/anchors/mmkcloud-root-ca.crt
+sudo update-ca-trust
 curl -v https://counting.mmkcloud.ai/
 ```
+![Success-https](../evidence/success-https-coutning-after-install-at-trusted-store.png)
 
 Because your dashboard runs in an ASG, put this trust-store installation into its launch template user data or AMI, then refresh the dashboard instances. Otherwise replacement instances will lose that trust configuration. 
 Never copy the root CA private key to EC2.
+
+Delete http listner at coutning ALB:
+
+Test
+```bash
+curl http://counting.mmkcloud.ai
+```
+Expected: fail
+
+Access users with http but traffic encripted
+
+## Step 8: Install the root CA certificate into Local Computer
+
+Test before root-ca.crt install into the local trusted store
+
+```bash
+curl -v https://dashboard.mmkcloud.ai
+
+```
+Expect: fail
+![fail](../evidence/fail-dashboard-from-local(before%20install%20ca).png)
+
+```bash
+sudo cp mmkcloud-root-ca.crt \
+  /usr/local/share/ca-certificates/mmkcloud-root-ca.crt
+sudo update-ca-certificates
+```
+
+Verify the access with https:
+```bash
+curl -v https://dashboard.mmkcloud.ai
+```
+
+Expected: Success
+![success-https://dashboard.mmkcloud.ai](../evidence/success-from-localpc.png)
+
+### Access from browser
+
+Import mmkcloud-root-ca.crt to the browser-certificates.
+
+![success-dashboard-https](../evidence/success.png)
+
+# Redirect to https from http
+
+
+Add Listener rule http:80 and redirect to 
+• Add a new action: Redirect to URL.
+• Choose HTTPS from the protocol dropdown.
+• Enter port 443.
+• Leave the host, path, and query parameters as default (they will automatically preserve the user's requested destination, like counting.mmkcloud.ai).
+
+![Add-listener-redirect to URL](../evidence/redirect-to-url.png)
