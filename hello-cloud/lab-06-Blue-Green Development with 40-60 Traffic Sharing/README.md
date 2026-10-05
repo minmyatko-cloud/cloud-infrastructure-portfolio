@@ -10,7 +10,7 @@ I extend my Multi-AZ Dashboard and Counting application with two Dashboard envir
 - Demonstrate full Green promotion and rollback to Blue.
 
 ## Architecture
-![Architecture](/evidences/traffic-flow-blue-green-environment.png)
+![Architecture](./evidences/traffic-flow-blue-green-environment.png)
 
 Solid arrows represent requests; dashed arrows represent DNS records or certificate configuration. ASGs manage instances rather than forwarding requests.
 
@@ -29,7 +29,7 @@ The 60/40 split controls **request share**, not instance counts. With maximum ca
 
 ## Deployment Workflow
 
-![Work-Flow](/evidences/release-work-flow.png)
+![Work-Flow](./evidences/release-work-flow.png)
 
 1. Record Blue's resources and verify its existing behavior.
 2. Create Green's Launch Template, target group, and ASG.
