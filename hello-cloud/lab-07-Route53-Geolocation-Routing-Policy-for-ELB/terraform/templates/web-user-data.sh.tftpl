@@ -1,0 +1,141 @@
+#!/bin/bash
+set -euo pipefail
+
+exec > /var/log/user-data.log 2>&1
+umask 077
+
+# Install Apache, TLS support, and JSON tools
+dnf install -y httpd mod_ssl openssl jq
+
+# Retrieve this server's current certificate bundle
+CERT_BUNDLE=$(mktemp)
+trap 'rm -f "$CERT_BUNDLE"' EXIT
+
+aws secretsmanager get-secret-value \
+  --region "${aws_region}" \
+  --secret-id "${secret_name}" \
+  --version-stage AWSCURRENT \
+  --query SecretString \
+  --output text \
+  --no-cli-pager > "$CERT_BUNDLE"
+
+# Install the certificate, private key, and root CA
+install -d -m 700 /etc/pki/tls/private
+
+jq -er '.certificate' "$CERT_BUNDLE" \
+  > /etc/pki/tls/certs/lab-web.crt
+
+jq -er '.private_key' "$CERT_BUNDLE" \
+  > /etc/pki/tls/private/lab-web.key
+
+jq -er '.root_ca' "$CERT_BUNDLE" \
+  > /etc/pki/tls/certs/lab-root-ca.crt
+
+chmod 600 /etc/pki/tls/private/lab-web.key
+chmod 644 \
+  /etc/pki/tls/certs/lab-web.crt \
+  /etc/pki/tls/certs/lab-root-ca.crt
+
+# Verify the server certificate against the supplied root CA
+openssl verify \
+  -CAfile /etc/pki/tls/certs/lab-root-ca.crt \
+  -purpose sslserver \
+  /etc/pki/tls/certs/lab-web.crt
+
+# Create the simple regional page
+cat > /var/www/html/index.html <<'HTML'
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Route 53 Geolocation Lab</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: ${background_color};
+      color: #182230;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    main {
+      padding: 32px;
+    }
+
+    h1 {
+      font-size: 36px;
+    }
+
+    p {
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Route 53 Geolocation Lab</h1>
+    <p>This is ${server_label}</p>
+  </main>
+</body>
+</html>
+HTML
+
+printf 'ok\n' > /var/www/html/health.html
+chmod 644 /var/www/html/index.html /var/www/html/health.html
+
+# Disable Apache's default HTTP listener
+sed -i \
+  's/^[[:space:]]*Listen[[:space:]]\+80[[:space:]]*$/# HTTP disabled/' \
+  /etc/httpd/conf/httpd.conf
+
+# Configure HTTPS
+cat > /etc/httpd/conf.d/ssl.conf <<'APACHE'
+Listen 443 https
+
+SSLSessionCache shmcb:/run/httpd/sslcache(512000)
+SSLSessionCacheTimeout 300
+
+<VirtualHost *:443>
+    ServerName geo.minracle.com
+    DocumentRoot "/var/www/html"
+
+    SSLEngine on
+    SSLProtocol -all +TLSv1.2 +TLSv1.3
+
+    SSLCertificateFile /etc/pki/tls/certs/lab-web.crt
+    SSLCertificateKeyFile /etc/pki/tls/private/lab-web.key
+
+    <Directory "/var/www/html">
+        Require all granted
+        AllowOverride None
+        Options -Indexes
+    </Directory>
+
+    ErrorLog /var/log/httpd/ssl_error_log
+    CustomLog /var/log/httpd/ssl_access_log combined
+</VirtualHost>
+APACHE
+
+restorecon -RF /etc/pki/tls /var/www/html
+
+# Validate and start services
+httpd -t
+systemctl enable httpd
+systemctl restart httpd
+systemctl enable --now amazon-ssm-agent
+
+# Test HTTPS locally using the actual application hostname
+curl \
+  --fail \
+  --silent \
+  --show-error \
+  --retry 5 \
+  --retry-connrefused \
+  --retry-delay 2 \
+  --cacert /etc/pki/tls/certs/lab-root-ca.crt \
+  --resolve geo.minracle.com:443:127.0.0.1 \
+  https://geo.minracle.com/health.html
