@@ -8,7 +8,7 @@ cd ~/lab-07-route53-geolocation
 ```
 
 Create versions.tf:
-~[versions.tf](../evidences/versions.tf)
+[versions.tf](../evidences/versions.tf)
 
 The provider requirement declares which plugin Terraform needs.
 ```bash
@@ -22,7 +22,7 @@ terraform validate
 
 # Step 2 — Configure AWS Regions: providers.tf
 
-![main.tf](../evidences/main.tf)
+[main.tf](../evidences/main.tf)
 
 Verify the profile and configuration:
 ```bash
@@ -35,7 +35,7 @@ terraform validate
 
 Create vpc.tf alongside main.tf and providers.tf:
 
-![vpc.tf](../terraform/vpc.tf)
+[vpc.tf](../terraform/vpc.tf)
 
 ```bash
 terraform fmt
@@ -48,7 +48,7 @@ terraform plan
 
 # Step 4 — Create the subnets: subnets.tf
 
-![subnets.tf](../terraform/subnets.tf)
+[subnets.tf](../terraform/subnets.tf)
 
 
 Check the configuration
@@ -66,7 +66,7 @@ terraform plan
 
 Create internet-gateways.tf in the root module directory:
 
-![internet-gateways.tf](../terraform/internet-gateways.tf)
+[internet-gateways.tf](../terraform/internet-gateways.tf)
 
 Check the configuration:
 ```bash
@@ -80,7 +80,7 @@ terraform plan
 
 # Step 6 — Public route tables: public-route-tables.tf
 
-![route-table.tf](../terraform/public-route-table.tf)
+[route-table.tf](../terraform/public-route-table.tf)
 
 Check the configuration:
 ```bash
@@ -96,7 +96,7 @@ terraform plan
 
 Create **`nat-gateways.tf`**:
 
-![nat-gateways.tf](../terraform/nat-gateways.tf)
+[nat-gateways.tf](../terraform/nat-gateways.tf)
 
 **Check the configuration:**
 ```bash
@@ -112,7 +112,7 @@ This file adds **3 Elastic IPs + 3 NAT gateways**.
 
 # Step 8 — Private route tables: `private-route-tables.tf`
 
-![private-route-table.tf](../terraform/private-route-table.tf)
+[private-route-table.tf](../terraform/private-route-table.tf)
 
 **Check the configuration:**
 
@@ -131,7 +131,7 @@ This file adds **3 route tables + 3 routes + 6 subnet associations**.
 
 Create **`security-groups.tf`**:
 
-![security-groups.tf](../terraform/main.tf)
+[security-groups.tf](../terraform/main.tf)
 
 **Check the configuration:**
 
@@ -148,7 +148,7 @@ terraform plan
 
 Create **`iam.tf`**:
 
-![iam-role-policy](../terraform/iam.tf)
+[iam-role-policy](../terraform/iam.tf)
 
 **Check the configuration:**
 
@@ -171,7 +171,7 @@ The total plan count depends on your updated security-group configuration.
 # Step 11 — Regional AMI lookup: `data.tf`
 
 Create **`data.tf`**:
-![data.tf](../terraform/data.tf)
+[data.tf](../terraform/data.tf)
 
 
 **Check the configuration:**
@@ -796,7 +796,7 @@ I create **two EC2 instances per Region**, each in a different private subnet. E
 
 Create **`ec2.tf`**:
 
-![Web-Server-ec2.tf](../terraform/ec2.tf)
+[Web-Server-ec2.tf](../terraform/ec2.tf)
 
 **Template changes replace instances**
 
@@ -814,7 +814,7 @@ terraform plan
 
 # Step 20 Create **`target-groups.tf`** in the root module.
 
-![target-group-attachment-registered-instances](../terraform/target-groups.tf)
+[target-group-attachment-registered-instances](../terraform/target-groups.tf)
 
 Run:
 
@@ -830,7 +830,7 @@ terraform validate
 
 I create three public ALBs, each spanning two public subnets in its region.
 
-![alb.tf](../terraform/alb.tf)
+[alb.tf](../terraform/alb.tf)
 
 Run:
 
@@ -846,7 +846,7 @@ terraform validate
 
 I use data sources to find the existing `geo.minracle.com` certificates imported into ACM in each region.
 
-![acm.tf](../terraform/acm.tf)
+[acm.tf](../terraform/acm.tf)
 
 The next file will reference these ARNs:
 
@@ -869,7 +869,7 @@ terraform validate
 
 # Step 23 Create **`listeners.tf`** in the root module.
 
-![listener.tf](../terraform/listener.tf)
+[listener.tf](../terraform/listener.tf)
 
 Run:
 
@@ -883,7 +883,7 @@ terraform validate
 
 # Step 24 Create **`route53-zone.tf`** in the root module.
 
-![route53.zone.tf](../terraform/route53-zone.tf)
+[route53.zone.tf](../terraform/route53-zone.tf)
 
 For now, run:
 
@@ -896,7 +896,7 @@ terraform validate
 
 # Step 25 Create **`route53-records.tf`** in the root module.
 
-![routet53-records.tf](../terraform/route53-records)
+[routet53-records.tf](../terraform/route53-records)
 
 Run:
 
@@ -909,7 +909,7 @@ Public DNS resolution will work after delegating `geo.minracle.com` to the hoste
 
 # Step 26 Create **`outputs.tf`** in the root module.
 
-![outputs.tf](../terraform/outputs.tf)
+[outputs.tf](../terraform/outputs.tf)
 
 
 ```bash
