@@ -14,15 +14,13 @@ I configured Route 53 geolocation routing to direct users to regional Applicatio
 - **Secret storage:** EC2 certificate bundles stored in AWS Secrets Manager.
 - **Access:** IAM roles and instance profiles for secret retrieval and Systems Manager.
 
-![Architecture]()
-
 Route 53 selects the regional endpoint during DNS resolution. Each ALB then forwards application requests to its regional web servers.
 
-![Architecture](/drawing/architecture.png)
+![Architecture](./drawing/architecture.png)
 
 ## Route53-Geolocationpolicy-Workflow
 
-![route53-geolocation-policy](/drawing/route53-geolocation-workflow.drawio.png)
+![route53-geolocation-policy](./drawing/route53-geolocation-workflow.drawio.png)
 
 ## Lab Workflow
 
