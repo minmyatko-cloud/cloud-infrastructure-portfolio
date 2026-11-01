@@ -24,8 +24,8 @@ frontend/backend VPC environments.
 
 | Security Group | Direction | Rule | Source / Destination |
 |---|---|---|---|
-| `pub-sgp-01` | Inbound | Allow ICMP (Ping) | Your Public IP |
-| `pub-sgp-01` | Inbound | Allow SSH (TCP 22) | Your Public IP |
+| `pub-sgp-01` | Inbound | Allow ICMP (Ping) | My Public IP |
+| `pub-sgp-01` | Inbound | Allow SSH (TCP 22) | My Public IP |
 | `pub-sgp-01` | Outbound | Allow All Traffic | `0.0.0.0/0` |
 | `pri-sgp-01` | Inbound | Allow ICMP (Ping) | `pub-sgp-01` |
 | `pri-sgp-01` | Inbound | Allow SSH (TCP 22) | `pub-sgp-01` |
@@ -47,8 +47,8 @@ frontend/backend VPC environments.
 
 | Security Group | Direction | Rule | Source / Destination |
 |---|---|---|---|
-| `pub-sgp-01` | Inbound | Allow ICMP (Ping) | Your Public IP |
-| `pub-sgp-01` | Inbound | Allow SSH (TCP 22) | Your Public IP |
+| `pub-sgp-01` | Inbound | Allow ICMP (Ping) | My Public IP |
+| `pub-sgp-01` | Inbound | Allow SSH (TCP 22) | My Public IP |
 | `pub-sgp-01` | Outbound | Allow All Traffic | `0.0.0.0/0` |
 | `pri-sgp-01` | Inbound | Allow ICMP (Ping) | `pub-sgp-01` |
 | `pri-sgp-01` | Inbound | Allow SSH (TCP 22) | `pub-sgp-01` |
