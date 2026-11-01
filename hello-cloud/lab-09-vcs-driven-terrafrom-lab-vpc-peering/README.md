@@ -116,12 +116,12 @@ Destroy follows the reverse dependency order:
 
 ``` mermaid
 flowchart RL
-    A["fe-network-ws"] --> B["fe-security-ws"]
-    B --> C["fe-compute-ws"]
-    C --> D["be-network-ws"]
-    D --> E["be-security-ws"]
-    E --> F["be-compute-ws"]
-    F --> G["vpc-peering-ws"]
+    A["fe-network-ws"] <-- B["fe-security-ws"]
+    B <-- C["fe-compute-ws"]
+    C <-- D["be-network-ws"]
+    D <-- E["be-security-ws"]
+    E <-- F["be-compute-ws"]
+    F <-- G["vpc-peering-ws"]
 ```
 
 Read the destroy sequence from right to left:
