@@ -16,51 +16,52 @@ workstation, GitHub repository and branches, HCP Terraform organization
 and workspaces, OPA policy controls, OIDC authentication, and the AWS
 frontend/backend VPC environments.
 
-![VPC Peering VCS-Driven Workflow Architecture](./drawing/)
+![VPC Peering VCS-Driven Workflow Architecture](./drawing/vpc-peering-vcs-driven-work-flow-architecture.png)
 
 ### Leased Privelige Security Rules
 
-1. Frontend VPC – Security Group Rules
-Security Group	Direction	Rule	Source / Destination
-pub-sgp-01	Inbound	Allow ICMP (Ping) to public-instance-01	Your Public IP
-pub-sgp-01	Inbound	Allow SSH (TCP 22) to public-instance-01	Your Public IP
-pub-sgp-01	Outbound	Allow all traffic	0.0.0.0/0
-pri-sgp-01	Inbound	Allow ICMP (Ping) to private-instance-01	pub-sgp-01
-pri-sgp-01	Inbound	Allow SSH (TCP 22) to private-instance-01	pub-sgp-01
-pri-sgp-01	Outbound	Allow all traffic	0.0.0.0/0
-pri-sgp-02	Inbound	Allow ICMP (Ping) to private-instance-02	pri-sgp-01 (Frontend VPC)
-pri-sgp-02	Inbound	Allow SSH (TCP 22) to private-instance-02	pri-sgp-01 (Frontend VPC)
-pri-sgp-02	Inbound	Allow ICMP (Ping) to private-instance-02	pri-sgp-02 (Backend VPC)
-pri-sgp-02	Inbound	Allow SSH (TCP 22) to private-instance-02	pri-sgp-02 (Backend VPC)
-pri-sgp-02	Outbound	Allow ICMP (Ping)	private-instance-02 (Backend VPC)
-pri-sgp-02	Outbound	Allow SSH (TCP 22)	private-instance-02 (Backend VPC)
-pri-sgp-03	Inbound	Allow ICMP (Ping) to private-instance-03	pri-sgp-01 (Frontend VPC)
-pri-sgp-03	Inbound	Allow SSH (TCP 22) to private-instance-03	pri-sgp-01 (Frontend VPC)
-pri-sgp-03	Inbound	Allow ICMP (Ping) to private-instance-03	pri-sgp-03 (Backend VPC)
-pri-sgp-03	Inbound	Allow SSH (TCP 22) to private-instance-03	pri-sgp-03 (Backend VPC)
-pri-sgp-03	Outbound	Allow ICMP (Ping)	private-instance-03 (Backend VPC)
-pri-sgp-03	Outbound	Allow SSH (TCP 22)	private-instance-03 (Backend VPC)
+| Security Group | Direction | Rule | Source / Destination |
+|---|---|---|---|
+| `pub-sgp-01` | Inbound | Allow ICMP (Ping) | Your Public IP |
+| `pub-sgp-01` | Inbound | Allow SSH (TCP 22) | Your Public IP |
+| `pub-sgp-01` | Outbound | Allow All Traffic | `0.0.0.0/0` |
+| `pri-sgp-01` | Inbound | Allow ICMP (Ping) | `pub-sgp-01` |
+| `pri-sgp-01` | Inbound | Allow SSH (TCP 22) | `pub-sgp-01` |
+| `pri-sgp-01` | Outbound | Allow All Traffic | `0.0.0.0/0` |
+| `pri-sgp-02` | Inbound | Allow ICMP (Ping) | `pri-sgp-01` (Frontend VPC) |
+| `pri-sgp-02` | Inbound | Allow SSH (TCP 22) | `pri-sgp-01` (Frontend VPC) |
+| `pri-sgp-02` | Inbound | Allow ICMP (Ping) | `pri-sgp-02` (Backend VPC) |
+| `pri-sgp-02` | Inbound | Allow SSH (TCP 22) | `pri-sgp-02` (Backend VPC) |
+| `pri-sgp-02` | Outbound | Allow ICMP (Ping) | `private-instance-02` (Backend VPC) |
+| `pri-sgp-02` | Outbound | Allow SSH (TCP 22) | `private-instance-02` (Backend VPC) |
+| `pri-sgp-03` | Inbound | Allow ICMP (Ping) | `pri-sgp-01` (Frontend VPC) |
+| `pri-sgp-03` | Inbound | Allow SSH (TCP 22) | `pri-sgp-01` (Frontend VPC) |
+| `pri-sgp-03` | Inbound | Allow ICMP (Ping) | `pri-sgp-03` (Backend VPC) |
+| `pri-sgp-03` | Inbound | Allow SSH (TCP 22) | `pri-sgp-03` (Backend VPC) |
+| `pri-sgp-03` | Outbound | Allow ICMP (Ping) | `private-instance-03` (Backend VPC) |
+| `pri-sgp-03` | Outbound | Allow SSH (TCP 22) | `private-instance-03` (Backend VPC) |
 
 2. Backend VPC – Security Group Rules
-Security Group	Direction	Rule	Source / Destination
-pub-sgp-01	Inbound	Allow ICMP (Ping) to public-instance-01	Your Public IP
-pub-sgp-01	Inbound	Allow SSH (TCP 22) to public-instance-01	Your Public IP
-pub-sgp-01	Outbound	Allow all traffic	0.0.0.0/0
-pri-sgp-01	Inbound	Allow ICMP (Ping) to private-instance-01	pub-sgp-01
-pri-sgp-01	Inbound	Allow SSH (TCP 22) to private-instance-01	pub-sgp-01
-pri-sgp-01	Outbound	Allow all traffic	0.0.0.0/0
-pri-sgp-02	Inbound	Allow ICMP (Ping) to private-instance-02	pri-sgp-01 (Backend VPC)
-pri-sgp-02	Inbound	Allow SSH (TCP 22) to private-instance-02	pri-sgp-01 (Backend VPC)
-pri-sgp-02	Inbound	Allow ICMP (Ping) to private-instance-02	pri-sgp-02 (Frontend VPC)
-pri-sgp-02	Inbound	Allow SSH (TCP 22) to private-instance-02	pri-sgp-02 (Frontend VPC)
-pri-sgp-02	Outbound	Allow ICMP (Ping)	private-instance-02 (Frontend VPC)
-pri-sgp-02	Outbound	Allow SSH (TCP 22)	private-instance-02 (Frontend VPC)
-pri-sgp-03	Inbound	Allow ICMP (Ping) to private-instance-03	pri-sgp-01 (Backend VPC)
-pri-sgp-03	Inbound	Allow SSH (TCP 22) to private-instance-03	pri-sgp-01 (Backend VPC)
-pri-sgp-03	Inbound	Allow ICMP (Ping) to private-instance-03	pri-sgp-03 (Frontend VPC)
-pri-sgp-03	Inbound	Allow SSH (TCP 22) to private-instance-03	pri-sgp-03 (Frontend VPC)
-pri-sgp-03	Outbound	Allow ICMP (Ping)	private-instance-03 (Frontend VPC)
-pri-sgp-03	Outbound	Allow SSH (TCP 22)	private-instance-03 (Frontend VPC)
+| Security Group | Direction | Rule | Source / Destination |
+|---|---|---|---|
+| `pub-sgp-01` | Inbound | Allow ICMP (Ping) | Your Public IP |
+| `pub-sgp-01` | Inbound | Allow SSH (TCP 22) | Your Public IP |
+| `pub-sgp-01` | Outbound | Allow All Traffic | `0.0.0.0/0` |
+| `pri-sgp-01` | Inbound | Allow ICMP (Ping) | `pub-sgp-01` |
+| `pri-sgp-01` | Inbound | Allow SSH (TCP 22) | `pub-sgp-01` |
+| `pri-sgp-01` | Outbound | Allow All Traffic | `0.0.0.0/0` |
+| `pri-sgp-02` | Inbound | Allow ICMP (Ping) | `pri-sgp-01` (Backend VPC) |
+| `pri-sgp-02` | Inbound | Allow SSH (TCP 22) | `pri-sgp-01` (Backend VPC) |
+| `pri-sgp-02` | Inbound | Allow ICMP (Ping) | `pri-sgp-02` (Frontend VPC) |
+| `pri-sgp-02` | Inbound | Allow SSH (TCP 22) | `pri-sgp-02` (Frontend VPC) |
+| `pri-sgp-02` | Outbound | Allow ICMP (Ping) | `private-instance-02` (Frontend VPC) |
+| `pri-sgp-02` | Outbound | Allow SSH (TCP 22) | `private-instance-02` (Frontend VPC) |
+| `pri-sgp-03` | Inbound | Allow ICMP (Ping) | `pri-sgp-01` (Backend VPC) |
+| `pri-sgp-03` | Inbound | Allow SSH (TCP 22) | `pri-sgp-01` (Backend VPC) |
+| `pri-sgp-03` | Inbound | Allow ICMP (Ping) | `pri-sgp-03` (Frontend VPC) |
+| `pri-sgp-03` | Inbound | Allow SSH (TCP 22) | `pri-sgp-03` (Frontend VPC) |
+| `pri-sgp-03` | Outbound | Allow ICMP (Ping) | `private-instance-03` (Frontend VPC) |
+| `pri-sgp-03` | Outbound | Allow SSH (TCP 22) | `private-instance-03` (Frontend VPC) |
 
 
 
