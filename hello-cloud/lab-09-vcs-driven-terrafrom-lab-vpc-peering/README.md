@@ -16,7 +16,7 @@ workstation, GitHub repository and branches, HCP Terraform organization
 and workspaces, OPA policy controls, OIDC authentication, and the AWS
 frontend/backend VPC environments.
 
-![VPC Peering VCS-Driven Workflow Architecture](./drawing/vpc-peering-vcs-driven-work-flow-architecture.png)
+![VPC Peering VCS-Driven Workflow Architecture](./drawing/)
 
 ## Project Objectives
 
@@ -116,12 +116,12 @@ Destroy follows the reverse dependency order:
 
 ``` mermaid
 flowchart RL
-    A["fe-network-ws"] <-- B["fe-security-ws"]
-    B <-- C["fe-compute-ws"]
-    C <-- D["be-network-ws"]
-    D <-- E["be-security-ws"]
-    E <-- F["be-compute-ws"]
-    F <-- G["vpc-peering-ws"]
+    A["vpc-peering-ws"] --> B["be-compute-ws"]
+    B --> C["be-security-ws"]
+    C --> D["be-network-ws"]
+    D --> E["fe-compute-ws"]
+    E --> F["fe-security-ws"]
+    F --> G["fe-network-ws"]
 ```
 
 Read the destroy sequence from right to left:
