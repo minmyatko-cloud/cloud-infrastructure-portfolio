@@ -20,6 +20,8 @@ frontend/backend VPC environments.
 
 ### Leased Privelige Security Rules
 
+**Frontend Security Group Rules**
+
 | Security Group | Direction | Rule | Source / Destination |
 |---|---|---|---|
 | `pub-sgp-01` | Inbound | Allow ICMP (Ping) | Your Public IP |
@@ -41,7 +43,8 @@ frontend/backend VPC environments.
 | `pri-sgp-03` | Outbound | Allow ICMP (Ping) | `private-instance-03` (Backend VPC) |
 | `pri-sgp-03` | Outbound | Allow SSH (TCP 22) | `private-instance-03` (Backend VPC) |
 
-2. Backend VPC – Security Group Rules
+**Backend VPC – Security Group Rules**
+
 | Security Group | Direction | Rule | Source / Destination |
 |---|---|---|---|
 | `pub-sgp-01` | Inbound | Allow ICMP (Ping) | Your Public IP |
