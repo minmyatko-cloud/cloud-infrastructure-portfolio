@@ -1,0 +1,118 @@
+flowchart TB
+    %% VPC Peering VCS-driven Terraform Lab
+    DEV["Engineer / Ubuntu workstation<br/>Terraform configuration & Git"] --> GH
+
+    subgraph GITHUB["GitHub - minmyatko-cloud / vpc-peering-vcs-driven"]
+      GH["Repository"]
+      MAIN["main branch<br/>Protected: PR + approval + checks"]
+      PR["Feature branches<br/>fe-network-ws, fe-security-ws,<br/>fe-compute-ws, be-* and peering"]
+      GH --> MAIN
+      PR -->|"Pull request / review / merge"| MAIN
+    end
+
+    MAIN -->|"VCS integration + path filters"| HCP
+
+    subgraph HCP["HCP Terraform organization: minmyatko"]
+      direction TB
+      PROJ["Project: vpc-peering-vcs-driven"]
+
+      subgraph FEWS["Frontend workspaces"]
+        FEN["fe-network-ws<br/>VPC, subnets, IGW, NAT, route tables"]
+        FES["fe-security-ws<br/>Frontend security groups / ingress rules"]
+        FEC["fe-compute-ws<br/>Frontend EC2 instances"]
+        FEN -->|"tfe_outputs / shared outputs"| FES
+        FEN -->|"VPC & subnet outputs"| FEC
+        FES -->|"Security group outputs"| FEC
+      end
+
+      subgraph BEWS["Backend workspaces"]
+        BEN["be-network-ws<br/>VPC, subnets, IGW, NAT, route tables"]
+        BES["be-security-ws<br/>Backend security groups / ingress rules"]
+        BEC["be-compute-ws<br/>Backend EC2 instances"]
+        BEN -->|"tfe_outputs / shared outputs"| BES
+        BEN -->|"VPC & subnet outputs"| BEC
+        BES -->|"Security group outputs"| BEC
+      end
+
+      PEER["vpc-peering-intra-region-ws<br/>VPC peering connection + accepter<br/>Routes in both VPCs"]
+      FEN -->|"VPC IDs / CIDRs / route table IDs"| PEER
+      BEN -->|"VPC IDs / CIDRs / route table IDs"| PEER
+      FES -->|"Security group IDs (if required)"| PEER
+      BES -->|"Security group IDs (if required)"| PEER
+      FEC -. "compute outputs / dependencies" .-> PEER
+      BEC -. "compute outputs / dependencies" .-> PEER
+
+      RUNNER["workspace-runner-ws<br/>tfe provider + TFE_TOKEN<br/>7 tfe_workspace_run resources"]
+      RUNNER -. "queues remote runs; does not own AWS resources" .-> FEN
+      RUNNER -.-> FES
+      RUNNER -.-> FEC
+      RUNNER -.-> BEN
+      RUNNER -.-> BES
+      RUNNER -.-> BEC
+      RUNNER -.-> PEER
+
+      POL["Organization OPA policies<br/>instance_type: Mandatory (t3.micro)<br/>public_ingress: Advisory (0.0.0.0/0)"]
+      SET["Policy sets<br/>scope policies to project / selected workspaces"]
+      POL --> SET
+      SET -. "policy checks on plans" .-> FEN
+      SET -.-> FES
+      SET -.-> FEC
+      SET -.-> BEN
+      SET -.-> BES
+      SET -.-> BEC
+      SET -.-> PEER
+    end
+
+    subgraph AWS["AWS account - ap-southeast-1 (Singapore)"]
+      direction LR
+      subgraph FEVPC["Frontend VPC - 10.0.0.0/16"]
+        FEIGW["Internet Gateway"]
+        FEPUB["Public subnet(s)<br/>Public EC2"]
+        FENAT["NAT Gateway"]
+        FEPRIV["Private subnet(s)<br/>Private EC2"]
+        FEIGW --- FEPUB
+        FEPUB --- FENAT
+        FENAT --- FEPRIV
+      end
+      PCX["VPC Peering<br/>Active connection"]
+      subgraph BEVPC["Backend VPC - 192.168.0.0/16"]
+        BEIGW["Internet Gateway"]
+        BEPUB["Public subnet(s)<br/>Public EC2"]
+        BENAT["NAT Gateway"]
+        BEPRIV["Private subnet(s)<br/>Private EC2"]
+        BEIGW --- BEPUB
+        BEPUB --- BENAT
+        BENAT --- BEPRIV
+      end
+      FEVPC <-->|"Private IP routing<br/>peer-CIDR routes both ways"| PCX
+      PCX <-->|"Private IP routing"| BEVPC
+    end
+
+    HCP -->|"AWS provider operations via OIDC"| IAM
+    IAM["AWS IAM OIDC provider<br/>https://app.terraform.io<br/>Trust policy scoped to org/project/workspace/run phase<br/>aws-plan-role + aws-apply-role"]
+    IAM -->|"temporary credentials"| AWS
+    FEN -->|"provisions"| FEVPC
+    FES -->|"configures"| FEVPC
+    FEC -->|"provisions"| FEVPC
+    BEN -->|"provisions"| BEVPC
+    BES -->|"configures"| BEVPC
+    BEC -->|"provisions"| BEVPC
+    PEER -->|"creates peering + routes"| PCX
+
+    TEST["Validation recorded in lab notes<br/>SSH to public instances; internet reachability;<br/>intra-VPC ping; selected cross-VPC private-IP ping;<br/>restricted paths expected to fail"]
+    FEVPC --> TEST
+    BEVPC --> TEST
+    PCX --> TEST
+
+    classDef github fill:#e8f0fe,stroke:#3367d6,color:#1a237e;
+    classDef hcp fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20;
+    classDef policy fill:#fff3e0,stroke:#ef6c00,color:#7f3b00;
+    classDef aws fill:#fff8e1,stroke:#f9a825,color:#5d4037;
+    classDef runner fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c;
+    classDef test fill:#e0f7fa,stroke:#00838f,color:#004d40;
+    class GH,MAIN,PR github;
+    class PROJ,FEN,FES,FEC,BEN,BES,BEC,PEER hcp;
+    class POL,SET policy;
+    class RUNNER runner;
+    class IAM,FEVPC,BEVPC,PCX,FEIGW,FEPUB,FENAT,FEPRIV,BEIGW,BEPUB,BENAT,BEPRIV aws;
+    class TEST test;
